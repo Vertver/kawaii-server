@@ -1,0 +1,3 @@
+name: Kawaii Server
+version: ${project.version}
+main: vertver.kawaiiserver.KawaiiServer
