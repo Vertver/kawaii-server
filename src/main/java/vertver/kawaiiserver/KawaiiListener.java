@@ -3,6 +3,7 @@ package vertver.kawaiiserver;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.event.block.Action;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -24,15 +25,31 @@ public class KawaiiListener implements Listener {
 
     private boolean checkPlayerOutOfBounds(Player currentPlayer)
     {
-        if (!currentPlayer.isOp() || !currentPlayer.hasPermission("kawaii.antinether.bypass"))
-        {
-            if (currentPlayer.getWorld().getEnvironment() == World.Environment.NETHER)
-            {
-                return !(currentPlayer.getLocation().getY() >= 128);
+        Location playerLocation = currentPlayer.getLocation();
+        if (currentPlayer.getWorld().getEnvironment() == World.Environment.NETHER) {
+            if (!currentPlayer.hasPermission("kawaii.antinether.bypass") || !currentPlayer.isOp()) {
+                return !(playerLocation.getY() >= 128);
             }
         }
 
         return true;
+    }
+
+    String[] getBlockedUseItems() {
+        return new String[]{ "IC2_MINING_LASER", "IMMERSIVEENGINEERING_REVOLVER" };
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!event.getPlayer().isOp() && ((event.getAction() == Action.RIGHT_CLICK_BLOCK) || (event.getAction() == Action.RIGHT_CLICK_AIR))) {
+            for (String idBlocked : getBlockedUseItems()) {
+                ItemStack thisItem = event.getPlayer().getInventory().getItemInMainHand();
+                if (thisItem != null && thisItem.getType().name().equals(idBlocked))  {
+                    event.setCancelled(true);
+                    ServerChat.sendMessage(plugin.getServer(), ChatColor.YELLOW + thisItem.getType().name() + " from player " + event.getPlayer().getName() + " canceled.");
+                }
+            }
+        }
     }
 
     @EventHandler
